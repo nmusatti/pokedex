@@ -1,32 +1,12 @@
-use rocket::{
-    get, routes,
-    serde::{json::Json, Serialize},
-    Error,
-};
+mod api;
+mod error;
+mod model;
+mod pokeapi;
 
-#[derive(Serialize)]
-struct Pokemon {
-    name: String,
-}
+use rocket::routes;
 
-async fn pokemon(name: &str) -> Result<Pokemon,reqwest::Error> {
-    let resp = reqwest::get(format!("https://pokeapi.co/api/v2/pokemon/{}", name))
-    .await?
-    .json::<serde_json::Value>()
-    .await?;
-
-    Ok(Pokemon{ name: resp["name"].to_string() })
-}
-
-#[get("/<name>")]
-async fn plain(name: &str) -> Json<Pokemon> {
-    Json(pokemon(name).await.unwrap())
-}
-
-#[get("/translated/<name>")]
-async fn translated(name: &str) -> Json<Pokemon> {
-    Json(pokemon(name).await.unwrap())
-}
+use crate::api::{plain, translated};
+use crate::error::Error;
 
 #[rocket::main]
 async fn main() -> Result<(), Error> {
