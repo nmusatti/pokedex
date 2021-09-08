@@ -1,6 +1,4 @@
-use rocket::{
-    serde::Serialize,
-};
+use rocket::serde::Serialize;
 
 #[derive(Serialize)]
 pub(crate) struct Pokemon {
@@ -9,6 +7,8 @@ pub(crate) struct Pokemon {
 
 impl Pokemon {
     pub(crate) fn new(name: &str) -> Self {
-        Self { name: name.to_owned() }
+        Self {
+            name: name.to_owned(),
+        }
     }
 }
