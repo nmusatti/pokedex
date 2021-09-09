@@ -3,11 +3,11 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error(transparent)]
-    PokeapiError(#[from] PokeapiError),
+    Pokeapi(#[from] PokeapiError),
     #[error(transparent)]
-    ReqwestError(#[from] reqwest::Error),
+    Reqwest(#[from] reqwest::Error),
     #[error(transparent)]
-    RocketError(#[from] rocket::Error),
+    Rocket(#[from] rocket::Error),
 }
 
 #[derive(Error, Debug)]

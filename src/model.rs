@@ -14,12 +14,12 @@ impl Pokemon {
             name: name.to_owned(),
             description: description.to_owned(),
             habitat: habitat.to_owned(),
-            is_legendary
+            is_legendary,
         }
     }
 }
 
 pub(crate) enum Mode {
     Plain,
-    Translated
+    Translated,
 }
