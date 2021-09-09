@@ -36,7 +36,7 @@ pub(crate) async fn pokemon(name: &str, mode: Mode) -> Result<Pokemon, Error> {
     }
     if let Mode::Translated = mode {
         if let Some(desc) = description.as_mut() {
-            if let Some(trans) = funtranslations(desc, Language::Yoda).await? {
+            if let Ok(trans) = funtranslations(desc, Language::Yoda).await {
                 description = Some(trans);
             }
         }

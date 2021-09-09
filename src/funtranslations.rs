@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::{Error, FuntranslationsError};
 
 pub(crate) enum Language {
     Shakespeare,
@@ -14,7 +14,7 @@ impl Language {
     }
 }
 
-pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<Option<String>, Error> {
+pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String, Error> {
     let client = reqwest::Client::new();
     let trans_resp = client
         .post(format!(
@@ -30,14 +30,24 @@ pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<Option
             let translation = trans_json["contents"].as_object().unwrap()["translated"]
                 .as_str()
                 .unwrap();
-            Ok(Some(translation.to_owned()))
+            Ok(translation.to_owned())
         }
-        Err(_) => Ok(None),
+        Err(err) => {
+            let msg = if let Some(status) = err.status() {
+                format!("Error code: {}", status.as_str())
+            }
+            else {
+                "Unknown error".to_owned()
+            };
+            Err(FuntranslationsError::BadResponse(msg).into())
+        },
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::error::Error;
+
     use super::{funtranslations, Language};
 
     #[tokio::test]
@@ -62,12 +72,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn yoda_ok() {
-        let resp = funtranslations("Jane skips rope", Language::Yoda)
-            .await
-            .unwrap();
-        if let Some(trans) = resp {
-            assert_eq!("Rope, jane  skips", trans);
-        }
+    async fn yoda_ok() -> Result<(), Error> {
+        let resp = funtranslations("Jane skips rope", Language::Shakespeare)
+            .await?;
+        assert_eq!("Rope, jane  skips", resp);
+        Ok(())
     }
 }
