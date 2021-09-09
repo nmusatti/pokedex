@@ -1,5 +1,6 @@
 mod api;
 mod error;
+mod funtranslations;
 mod model;
 mod pokeapi;
 
