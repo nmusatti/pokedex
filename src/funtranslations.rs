@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use reqwest::{Client, Request};
 
+use serde::Deserialize;
+
 use crate::error::{Error, FuntranslationsError};
 
 pub(crate) enum Language {
@@ -16,6 +18,16 @@ impl Language {
             Language::Yoda => "yoda",
         }
     }
+}
+
+#[derive(Deserialize, Debug)]
+struct Contents {
+    translated: Option<String>
+}
+
+#[derive(Deserialize, Debug)]
+struct Translation {
+    contents: Option<Contents>
 }
 
 fn make_request(client: &Client, text: &str, lang: &Language) -> Result<Request, reqwest::Error> {
@@ -35,11 +47,8 @@ pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String
     let trans_resp = client.execute(trans_request).await;
     match trans_resp {
         Ok(resp) => {
-            let trans_json = resp.json::<serde_json::Value>().await?;
-            let translation = trans_json["contents"].as_object().unwrap()["translated"]
-                .as_str()
-                .unwrap();
-            Ok(translation.to_owned())
+            let translation = resp.json::<Translation>().await?;
+            Ok(translation.contents.unwrap().translated.unwrap())
         }
         Err(err) => {
             let msg = if let Some(status) = err.status() {

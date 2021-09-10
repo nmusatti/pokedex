@@ -1,42 +1,74 @@
 use reqwest::get;
 
+use serde::Deserialize;
+
 use crate::{
     error::Error,
     funtranslations::{funtranslations, Language},
     model::{Mode, Pokemon},
 };
 
+#[derive(Deserialize, Debug)]
+struct SpeciesRef {
+    url: Option<String>
+}
+
+#[derive(Deserialize, Debug)]
+struct Individual {
+    species: Option<SpeciesRef>
+}
+
+#[derive(Deserialize, Debug)]
+struct Habitat {
+    name: Option<String>
+}
+
+#[derive(Deserialize, Debug)]
+struct Lang {
+    name: Option<String>
+}
+
+#[derive(Deserialize, Debug)]
+struct Flavor {
+    flavor_text: Option<String>,
+    language: Option<Lang>
+}
+
+#[derive(Deserialize, Debug)]
+struct Species {
+    is_legendary: Option<bool>,
+    habitat: Option<Habitat>,
+    flavor_text_entries: Vec<Flavor>
+}
+
 pub(crate) async fn pokemon(name: &str, mode: Mode) -> Result<Pokemon, Error> {
-    let pokemon_resp = get(format!("https://pokeapi.co/api/v2/pokemon/{}", name))
+    let individual = get(format!("https://pokeapi.co/api/v2/pokemon/{}", name))
         .await?
-        .json::<serde_json::Value>()
+        .json::<Individual>()
         .await?;
 
-    let species_url = pokemon_resp["species"].as_object().unwrap()["url"]
-        .as_str()
-        .unwrap();
-    let species_resp = reqwest::get(species_url)
+    let species_url = individual.species.unwrap().url.unwrap();
+    let species = get(species_url)
         .await?
-        .json::<serde_json::Value>()
+        .json::<Species>()
         .await?;
-    let is_legendary = species_resp["is_legendary"].as_bool().unwrap();
-    let habitat = species_resp["habitat"].as_object().unwrap()["name"]
-        .as_str()
-        .unwrap();
-    let flavor_text = species_resp["flavor_text_entries"].as_array().unwrap();
+    let is_legendary = species.is_legendary.unwrap();
+    let habitat = species.habitat.unwrap().name.unwrap();
+    let flavor_text = species.flavor_text_entries;
     let mut description: Option<String> = None;
     for desc in flavor_text {
-        if desc["language"].as_object().unwrap()["name"]
-            .as_str()
-            .unwrap()
-            == "en"
-        {
-            description = Some(desc["flavor_text"].as_str().unwrap().to_owned());
+        if desc.language.unwrap().name.unwrap() == "en" {
+            description = Some(desc.flavor_text.unwrap());
         }
     }
     if let Mode::Translated = mode {
+        let lang = if habitat == "cave" || is_legendary {
+            Language::Yoda
+        } else {
+            Language::Shakespeare
+        };
         if let Some(desc) = description.as_mut() {
-            if let Ok(trans) = funtranslations(desc, Language::Yoda).await {
+            if let Ok(trans) = funtranslations(desc, lang).await {
                 description = Some(trans);
             }
         }
@@ -44,7 +76,7 @@ pub(crate) async fn pokemon(name: &str, mode: Mode) -> Result<Pokemon, Error> {
     Ok(Pokemon::new(
         name,
         &description.unwrap(),
-        habitat,
+        &habitat,
         is_legendary,
     ))
 }
