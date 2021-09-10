@@ -6,6 +6,8 @@ use thiserror::Error;
 pub enum Error {
     #[error(transparent)]
     Http(#[from] HttpError),
+    #[error("Missing data: {0}")]
+    MissingData(String),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
     #[error(transparent)]

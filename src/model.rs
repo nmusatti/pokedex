@@ -6,10 +6,10 @@ use crate::error::Error;
 
 #[derive(Serialize)]
 pub(crate) struct Pokemon {
-    name: String,
-    description: String,
-    habitat: String,
-    is_legendary: bool,
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) habitat: String,
+    pub(crate) is_legendary: bool,
 }
 
 impl Pokemon {

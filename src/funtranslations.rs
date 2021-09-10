@@ -91,12 +91,8 @@ mod tests {
         let trans_request = translator.make_request("Jane skips rope", Language::Yoda)?;
         let trans_resp = translator.execute(trans_request).await;
         match trans_resp {
-            Ok(resp) => {
-                assert_eq!(resp.status().as_u16(), 200);
-            }
-            Err(err) => {
-                assert_eq!(err.status().unwrap().as_u16(), 400);
-            }
+            Ok(resp) => assert_eq!(resp.status().as_u16(), 200),
+            Err(err) => assert_eq!(err.status().unwrap().as_u16(), 400),
         };
         Ok(())
     }
@@ -108,12 +104,8 @@ mod tests {
             .translate("Jane skips rope", Language::Yoda)
             .await;
         match resp {
-            Ok(trans) => {
-                assert_eq!("Rope,  jane skips", trans);
-            }
-            Err(err) => {
-                assert_eq!(err.to_string(), "Status: 400 - Translation error");
-            }
+            Ok(trans) => assert_eq!("Rope,  jane skips", trans),
+            Err(err) => assert_eq!(err.to_string(), "Status: 400 - Translation error"),
         };
     }
 }
