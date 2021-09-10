@@ -2,20 +2,16 @@ use reqwest::get;
 
 use serde::Deserialize;
 
-use crate::{
-    error::Error,
-    funtranslations::{funtranslations, Language},
-    model::{Mode, Pokemon},
-};
+use crate::{error::{Error, HttpError}, model::{Language, Mode, Pokemon, Translator}};
 
 #[derive(Deserialize, Debug)]
 struct SpeciesRef {
-    url: Option<String>,
+    url: String,
 }
 
 #[derive(Deserialize, Debug)]
 struct Individual {
-    species: Option<SpeciesRef>,
+    species: SpeciesRef,
 }
 
 #[derive(Deserialize, Debug)]
@@ -36,44 +32,60 @@ struct Flavor {
 
 #[derive(Deserialize, Debug)]
 struct Species {
-    is_legendary: Option<bool>,
+    #[serde(default)]
+    is_legendary: bool,
     habitat: Option<Habitat>,
     flavor_text_entries: Vec<Flavor>,
 }
 
-pub(crate) async fn pokemon(name: &str, mode: Mode) -> Result<Pokemon, Error> {
-    let individual = get(format!("https://pokeapi.co/api/v2/pokemon/{}", name))
-        .await?
-        .json::<Individual>()
-        .await?;
+pub(crate) struct Pokeapi {
+    translator: Box<dyn Translator>
+}
 
-    let species_url = individual.species.unwrap().url.unwrap();
-    let species = get(species_url).await?.json::<Species>().await?;
-    let is_legendary = species.is_legendary.unwrap();
-    let habitat = species.habitat.unwrap().name.unwrap();
-    let flavor_text = species.flavor_text_entries;
-    let mut description: Option<String> = None;
-    for desc in flavor_text {
-        if desc.language.unwrap().name.unwrap() == "en" {
-            description = Some(desc.flavor_text.unwrap());
-        }
+impl Pokeapi {
+    pub(crate) fn new(translator: Box<dyn Translator>) -> Self {
+        Self{ translator }
     }
-    if let Mode::Translated = mode {
-        let lang = if habitat == "cave" || is_legendary {
-            Language::Yoda
-        } else {
-            Language::Shakespeare
-        };
-        if let Some(desc) = description.as_mut() {
-            if let Ok(trans) = funtranslations(desc, lang).await {
-                description = Some(trans);
+
+    pub(crate) async fn pokemon(&self, name: &str, mode: Mode) -> Result<Pokemon, Error> {
+        let individual_resp = get(format!("https://pokeapi.co/api/v2/pokemon/{}", name))
+            .await;
+        if let Err(err) = individual_resp {
+            return Err(HttpError::extract(err));
+        }
+        let individual = individual_resp.unwrap().json::<Individual>().await?;
+    
+        let species_resp = get(individual.species.url).await;
+        if let Err(err) = species_resp {
+            return Err(HttpError::extract(err));
+        }
+        let species = species_resp.unwrap().json::<Species>().await?;
+    
+        let habitat = species.habitat.unwrap().name.unwrap();
+        let mut description: Option<String> = None;
+        for desc in species.flavor_text_entries {
+            if desc.language.unwrap().name.unwrap() == "en" {
+                description = Some(desc.flavor_text.unwrap());
             }
         }
+        if let Mode::Translated = mode {
+            let lang = if habitat == "cave" || species.is_legendary {
+                Language::Yoda
+            } else {
+                Language::Shakespeare
+            };
+            if let Some(desc) = description.as_mut() {
+                if let Ok(trans) = self.translator.translate(desc, lang).await {
+                    description = Some(trans);
+                }
+            }
+        }
+        Ok(Pokemon::new(
+            name,
+            &description.unwrap(),
+            &habitat,
+            species.is_legendary,
+        ))
     }
-    Ok(Pokemon::new(
-        name,
-        &description.unwrap(),
-        &habitat,
-        is_legendary,
-    ))
+    
 }

@@ -1,11 +1,11 @@
+use std::fmt::Display;
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
     #[error(transparent)]
-    Funtranslations(#[from] FuntranslationsError),
-    #[error(transparent)]
-    Pokeapi(#[from] PokeapiError),
+    Http(#[from] HttpError),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
     #[error(transparent)]
@@ -13,13 +13,28 @@ pub enum Error {
 }
 
 #[derive(Error, Debug)]
-pub enum PokeapiError {
-    #[error("Missing '{0}' attribute")]
-    MissingAttribute(String),
+pub struct HttpError {
+    status: u16,
+    msg: String,
+    source: reqwest::Error
 }
 
-#[derive(Error, Debug)]
-pub enum FuntranslationsError {
-    #[error("{0}")]
-    BadResponse(String),
+impl HttpError {
+    pub(crate) fn new(status: u16, msg: String, source: reqwest::Error) -> Self {
+        Self{ status, msg, source }
+    }
+
+    pub(crate) fn extract(err: reqwest::Error) -> Error {
+        if let Some(status) = err.status() {
+            HttpError::new(status.as_u16(), "Translation error".to_owned(), err).into()
+        } else {
+            err.into()
+        }
+    }
+}
+
+impl Display for HttpError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Status: {} - {}", self.status, self.msg)
+    }
 }

@@ -1,4 +1,8 @@
+use async_trait::async_trait;
+
 use rocket::serde::Serialize;
+
+use crate::error::Error;
 
 #[derive(Serialize)]
 pub(crate) struct Pokemon {
@@ -22,4 +26,23 @@ impl Pokemon {
 pub(crate) enum Mode {
     Plain,
     Translated,
+}
+
+pub(crate) enum Language {
+    Shakespeare,
+    Yoda,
+}
+
+impl ToString for Language {
+    fn to_string(&self) -> String {
+        match self {
+            Language::Shakespeare => "shakespeare".to_owned(),
+            Language::Yoda => "yoda".to_owned(),
+        }
+    }
+}
+
+#[async_trait]
+pub(crate) trait Translator: Send + Sync {
+    async fn translate(& self, text: & str, lang: Language) -> Result<String, Error>;
 }

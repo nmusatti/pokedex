@@ -1,24 +1,12 @@
 use std::collections::HashMap;
 
-use reqwest::{Client, Request};
+use async_trait::async_trait;
+
+use reqwest::{Client, Request, Response};
 
 use serde::Deserialize;
 
-use crate::error::{Error, FuntranslationsError};
-
-pub(crate) enum Language {
-    Shakespeare,
-    Yoda,
-}
-
-impl Language {
-    pub(crate) fn lang(&self) -> &'static str {
-        match self {
-            Language::Shakespeare => "shakespeare",
-            Language::Yoda => "yoda",
-        }
-    }
-}
+use crate::{error::{Error, HttpError}, model::{Language, Translator}};
 
 #[derive(Deserialize, Debug)]
 struct Contents {
@@ -30,34 +18,51 @@ struct Translation {
     contents: Option<Contents>,
 }
 
-fn make_request(client: &Client, text: &str, lang: &Language) -> Result<Request, reqwest::Error> {
-    let map: HashMap<&str, &str> = [("text", text)].iter().cloned().collect();
-    client
-        .post(format!(
-            "https://api.funtranslations.com/translate/{}.json",
-            Language::lang(lang)
-        ))
-        .form(&map)
-        .build()
+pub(crate) struct Funtranslations {
+    client: Client
 }
 
-pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String, Error> {
-    let client = reqwest::Client::new();
-    let trans_request = make_request(&client, text, &lang)?;
-    let trans_resp = client.execute(trans_request).await;
-    match trans_resp {
-        Ok(resp) => {
-            let translation = resp.json::<Translation>().await?;
-            Ok(translation.contents.unwrap().translated.unwrap())
+impl Funtranslations {
+
+    pub(crate) fn new() -> Self {
+        Self{ client: reqwest::Client::new() }
+    }
+
+    fn make_request(&self, text: &str, lang: Language) -> Result<Request, reqwest::Error> {
+        let map: HashMap<&str, &str> = [("text", text)].iter().cloned().collect();
+        self.client
+            .post(format!(
+                "https://api.funtranslations.com/translate/{}.json",
+                lang.to_string()
+            ))
+            .form(&map)
+            .build()
+    }
+    
+    async fn execute(&self, request: Request) -> Result<Response, reqwest::Error> {
+        self.client.execute(request).await
+    }
+    
+    pub(crate) async fn translate(&self, text: &str, lang: Language) -> Result<String, Error> {
+        let trans_request = self.make_request(text, lang)?;
+        let trans_resp = self.execute(trans_request).await;
+        match trans_resp {
+            Ok(resp) => {
+                let translation = resp.json::<Translation>().await?;
+                Ok(translation.contents.unwrap().translated.unwrap())
+            }
+            Err(err) => {
+                Err(HttpError::extract(err))
+            }
         }
-        Err(err) => {
-            let msg = if let Some(status) = err.status() {
-                format!("Error code: {}", status.as_str())
-            } else {
-                "Unknown error".to_owned()
-            };
-            Err(FuntranslationsError::BadResponse(msg).into())
-        }
+    }
+    
+}
+
+#[async_trait]
+impl Translator for Funtranslations {
+    async fn translate(&self, text: &str, lang: Language) -> Result<String, Error> {
+        self.translate(text, lang).await
     }
 }
 
@@ -65,43 +70,44 @@ pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String
 mod tests {
     use crate::error::Error;
 
-    use super::{funtranslations, make_request, Language};
+    use super::{Funtranslations, Language};
 
     #[test]
-    fn make_request_ok() -> Result<(), Error> {
-        let client = reqwest::Client::new();
-        let text = "Who does the urlencoding?";
-        let req = make_request(&client, text, &Language::Shakespeare)?;
+    fn make_request_encodes_text() -> Result<(), Error> {
+        let translator = Funtranslations::new();
+        let req = translator.make_request("Who does the urlencoding?", Language::Shakespeare)?;
         let body = req.body().unwrap().as_bytes().unwrap();
-        assert_eq!(body, text.as_bytes());
+        assert_eq!(std::str::from_utf8(body), Ok("text=Who+does+the+urlencoding%3F"));
         Ok(())
     }
 
     #[tokio::test]
-    async fn request_ok() {
-        let url = format!(
-            "https://api.funtranslations.com/translate/{}.json",
-            Language::lang(&Language::Yoda)
-        );
-        assert_eq!(url, "https://api.funtranslations.com/translate/yoda.json");
-        let client = reqwest::Client::new();
-        let trans_resp = client.post(url).form("Jane skips rope").send().await;
+    async fn check_status_codes() -> Result<(), Error> {
+        let translator = Funtranslations::new();
+        let trans_request = translator.make_request("Jane skips rope", Language::Yoda)?;
+        let trans_resp = translator.execute(trans_request).await;
         match trans_resp {
             Ok(resp) => {
                 assert_eq!(resp.status().as_u16(), 200);
             }
             Err(err) => {
-                if let Some(status) = err.status() {
-                    assert_eq!(status.as_u16(), 400);
-                }
+                assert_eq!(err.status().unwrap().as_u16(), 400);
             }
         };
+        Ok(())
     }
 
     #[tokio::test]
-    async fn yoda_ok() -> Result<(), Error> {
-        let resp = funtranslations("Jane skips rope", Language::Yoda).await?;
-        assert_eq!("Rope,  jane skips", resp);
-        Ok(())
+    async fn check_translation() {
+        let translator = Funtranslations::new();
+        let resp = translator.translate("Jane skips rope", Language::Yoda).await;
+        match resp {
+            Ok(trans) => {
+                assert_eq!("Rope,  jane skips", trans);
+            },
+            Err(err) => {
+                assert_eq!(err.to_string(), "Status: 400 - Translation error");
+            }
+        };
     }
 }
