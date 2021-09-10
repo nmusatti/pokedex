@@ -19,11 +19,11 @@ impl Language {
 }
 
 fn make_request(client: &Client, text: &str, lang: &Language) -> Result<Request, reqwest::Error> {
-    let map: HashMap<&str, &str> = [("text", text),].iter().cloned().collect();
+    let map: HashMap<&str, &str> = [("text", text)].iter().cloned().collect();
     client
         .post(format!(
             "https://api.funtranslations.com/translate/{}.json",
-            Language::lang(&lang)
+            Language::lang(lang)
         ))
         .form(&map)
         .build()
@@ -44,12 +44,11 @@ pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String
         Err(err) => {
             let msg = if let Some(status) = err.status() {
                 format!("Error code: {}", status.as_str())
-            }
-            else {
+            } else {
                 "Unknown error".to_owned()
             };
             Err(FuntranslationsError::BadResponse(msg).into())
-        },
+        }
     }
 }
 
@@ -57,7 +56,7 @@ pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String
 mod tests {
     use crate::error::Error;
 
-    use super::{Language, funtranslations, make_request};
+    use super::{funtranslations, make_request, Language};
 
     #[test]
     fn make_request_ok() -> Result<(), Error> {
@@ -92,8 +91,7 @@ mod tests {
 
     #[tokio::test]
     async fn yoda_ok() -> Result<(), Error> {
-        let resp = funtranslations("Jane skips rope", Language::Yoda)
-            .await?;
+        let resp = funtranslations("Jane skips rope", Language::Yoda).await?;
         assert_eq!("Rope,  jane skips", resp);
         Ok(())
     }
