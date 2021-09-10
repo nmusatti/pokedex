@@ -1,6 +1,10 @@
 use rocket::{get, serde::json::Json};
 
-use crate::{funtranslations::Funtranslations, model::{Mode, Pokemon}, pokeapi::Pokeapi};
+use crate::{
+    funtranslations::Funtranslations,
+    model::{Mode, Pokemon},
+    pokeapi::Pokeapi,
+};
 
 fn build() -> Pokeapi {
     Pokeapi::new(Box::new(Funtranslations::new()))

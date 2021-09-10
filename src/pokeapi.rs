@@ -2,7 +2,10 @@ use reqwest::get;
 
 use serde::Deserialize;
 
-use crate::{error::{Error, HttpError}, model::{Language, Mode, Pokemon, Translator}};
+use crate::{
+    error::{Error, HttpError},
+    model::{Language, Mode, Pokemon, Translator},
+};
 
 #[derive(Deserialize, Debug)]
 struct SpeciesRef {
@@ -39,28 +42,27 @@ struct Species {
 }
 
 pub(crate) struct Pokeapi {
-    translator: Box<dyn Translator>
+    translator: Box<dyn Translator>,
 }
 
 impl Pokeapi {
     pub(crate) fn new(translator: Box<dyn Translator>) -> Self {
-        Self{ translator }
+        Self { translator }
     }
 
     pub(crate) async fn pokemon(&self, name: &str, mode: Mode) -> Result<Pokemon, Error> {
-        let individual_resp = get(format!("https://pokeapi.co/api/v2/pokemon/{}", name))
-            .await;
+        let individual_resp = get(format!("https://pokeapi.co/api/v2/pokemon/{}", name)).await;
         if let Err(err) = individual_resp {
             return Err(HttpError::extract(err));
         }
         let individual = individual_resp.unwrap().json::<Individual>().await?;
-    
+
         let species_resp = get(individual.species.url).await;
         if let Err(err) = species_resp {
             return Err(HttpError::extract(err));
         }
         let species = species_resp.unwrap().json::<Species>().await?;
-    
+
         let habitat = species.habitat.unwrap().name.unwrap();
         let mut description: Option<String> = None;
         for desc in species.flavor_text_entries {
@@ -87,5 +89,4 @@ impl Pokeapi {
             species.is_legendary,
         ))
     }
-    
 }

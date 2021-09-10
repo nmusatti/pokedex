@@ -16,12 +16,16 @@ pub enum Error {
 pub struct HttpError {
     status: u16,
     msg: String,
-    source: reqwest::Error
+    source: reqwest::Error,
 }
 
 impl HttpError {
     pub(crate) fn new(status: u16, msg: String, source: reqwest::Error) -> Self {
-        Self{ status, msg, source }
+        Self {
+            status,
+            msg,
+            source,
+        }
     }
 
     pub(crate) fn extract(err: reqwest::Error) -> Error {

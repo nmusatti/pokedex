@@ -44,5 +44,5 @@ impl ToString for Language {
 
 #[async_trait]
 pub(crate) trait Translator: Send + Sync {
-    async fn translate(& self, text: & str, lang: Language) -> Result<String, Error>;
+    async fn translate(&self, text: &str, lang: Language) -> Result<String, Error>;
 }
