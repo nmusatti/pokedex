@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+use reqwest::{Client, Request};
+
 use crate::error::{Error, FuntranslationsError};
 
 pub(crate) enum Language {
@@ -14,16 +18,21 @@ impl Language {
     }
 }
 
-pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String, Error> {
-    let client = reqwest::Client::new();
-    let trans_resp = client
+fn make_request(client: &Client, text: &str, lang: &Language) -> Result<Request, reqwest::Error> {
+    let map: HashMap<&str, &str> = [("text", text),].iter().cloned().collect();
+    client
         .post(format!(
             "https://api.funtranslations.com/translate/{}.json",
             Language::lang(&lang)
         ))
-        .form(text)
-        .send()
-        .await;
+        .form(&map)
+        .build()
+}
+
+pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String, Error> {
+    let client = reqwest::Client::new();
+    let trans_request = make_request(&client, text, &lang)?;
+    let trans_resp = client.execute(trans_request).await;
     match trans_resp {
         Ok(resp) => {
             let trans_json = resp.json::<serde_json::Value>().await?;
@@ -48,7 +57,17 @@ pub(crate) async fn funtranslations(text: &str, lang: Language) -> Result<String
 mod tests {
     use crate::error::Error;
 
-    use super::{funtranslations, Language};
+    use super::{Language, funtranslations, make_request};
+
+    #[test]
+    fn make_request_ok() -> Result<(), Error> {
+        let client = reqwest::Client::new();
+        let text = "Who does the urlencoding?";
+        let req = make_request(&client, text, &Language::Shakespeare)?;
+        let body = req.body().unwrap().as_bytes().unwrap();
+        assert_eq!(body, text.as_bytes());
+        Ok(())
+    }
 
     #[tokio::test]
     async fn request_ok() {
@@ -73,9 +92,9 @@ mod tests {
 
     #[tokio::test]
     async fn yoda_ok() -> Result<(), Error> {
-        let resp = funtranslations("Jane skips rope", Language::Shakespeare)
+        let resp = funtranslations("Jane skips rope", Language::Yoda)
             .await?;
-        assert_eq!("Rope, jane  skips", resp);
+        assert_eq!("Rope,  jane skips", resp);
         Ok(())
     }
 }
