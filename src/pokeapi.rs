@@ -10,35 +10,35 @@ use crate::{
 
 #[derive(Deserialize, Debug)]
 struct SpeciesRef {
-    url: Option<String>
+    url: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
 struct Individual {
-    species: Option<SpeciesRef>
+    species: Option<SpeciesRef>,
 }
 
 #[derive(Deserialize, Debug)]
 struct Habitat {
-    name: Option<String>
+    name: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
 struct Lang {
-    name: Option<String>
+    name: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
 struct Flavor {
     flavor_text: Option<String>,
-    language: Option<Lang>
+    language: Option<Lang>,
 }
 
 #[derive(Deserialize, Debug)]
 struct Species {
     is_legendary: Option<bool>,
     habitat: Option<Habitat>,
-    flavor_text_entries: Vec<Flavor>
+    flavor_text_entries: Vec<Flavor>,
 }
 
 pub(crate) async fn pokemon(name: &str, mode: Mode) -> Result<Pokemon, Error> {
@@ -48,10 +48,7 @@ pub(crate) async fn pokemon(name: &str, mode: Mode) -> Result<Pokemon, Error> {
         .await?;
 
     let species_url = individual.species.unwrap().url.unwrap();
-    let species = get(species_url)
-        .await?
-        .json::<Species>()
-        .await?;
+    let species = get(species_url).await?.json::<Species>().await?;
     let is_legendary = species.is_legendary.unwrap();
     let habitat = species.habitat.unwrap().name.unwrap();
     let flavor_text = species.flavor_text_entries;

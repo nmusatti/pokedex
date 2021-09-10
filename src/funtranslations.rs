@@ -22,12 +22,12 @@ impl Language {
 
 #[derive(Deserialize, Debug)]
 struct Contents {
-    translated: Option<String>
+    translated: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
 struct Translation {
-    contents: Option<Contents>
+    contents: Option<Contents>,
 }
 
 fn make_request(client: &Client, text: &str, lang: &Language) -> Result<Request, reqwest::Error> {
