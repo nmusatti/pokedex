@@ -26,7 +26,7 @@ impl HttpError {
     pub(crate) fn from_error(status: u16, source: reqwest::Error) -> Self {
         Self {
             status,
-            msg : source.to_string(),
+            msg: source.to_string(),
             source: Some(source),
         }
     }
@@ -35,7 +35,7 @@ impl HttpError {
         Self {
             status,
             msg: msg.to_owned(),
-            source: None
+            source: None,
         }
     }
     pub(crate) fn extract(err: reqwest::Error) -> Error {

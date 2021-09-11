@@ -56,33 +56,36 @@ impl Pokeapi {
             Ok(resp) => {
                 if resp.status().is_success() {
                     Ok(resp.json::<Individual>().await?)
-                }
-                else if resp.status().as_u16() == 404 {
+                } else if resp.status().as_u16() == 404 {
                     Err(Error::NotFound("Individual".to_owned()))
-                }
-                else {
-                    Err(HttpError::from_message(resp.status().as_u16(), "Error retrieving individual").into())
+                } else {
+                    Err(HttpError::from_message(
+                        resp.status().as_u16(),
+                        "Error retrieving individual",
+                    )
+                    .into())
                 }
             }
         }
     }
 
     async fn get_species(url: &str) -> Result<Species, Error> {
-        match get(url).await{
+        match get(url).await {
             Err(err) => Err(HttpError::extract(err)),
             Ok(resp) => {
                 if resp.status().is_success() {
                     Ok(resp.json::<Species>().await?)
-                }
-                else if resp.status().as_u16() == 404 {
+                } else if resp.status().as_u16() == 404 {
                     Err(Error::NotFound("Species".to_owned()))
-                }
-                else {
-                    Err(HttpError::from_message(resp.status().as_u16(), "Error retrieving species").into())
+                } else {
+                    Err(
+                        HttpError::from_message(resp.status().as_u16(), "Error retrieving species")
+                            .into(),
+                    )
                 }
             }
         }
-   }
+    }
 
     pub(crate) async fn pokemon(&self, name: &str, mode: Mode) -> Result<Pokemon, Error> {
         let individual = Self::get_individual(name).await?;

@@ -109,7 +109,7 @@ mod tests {
                 if let Error::Http(http) = err {
                     assert!(http.status > 299);
                 }
-            },
+            }
         };
     }
 }

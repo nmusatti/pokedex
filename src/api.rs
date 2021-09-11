@@ -1,19 +1,25 @@
-use rocket::{Either, Request, catch, get, http::Status, response::status::Custom, serde::json::Json};
+use rocket::{
+    catch, get, http::Status, response::status::Custom, serde::json::Json, Either, Request,
+};
 
-use crate::{error::Error, funtranslations::Funtranslations, model::{Mode, Pokemon}, pokeapi::Pokeapi};
-
+use crate::{
+    error::Error,
+    funtranslations::Funtranslations,
+    model::{Mode, Pokemon},
+    pokeapi::Pokeapi,
+};
 
 async fn process(name: &str, mode: Mode) -> Either<Json<Pokemon>, Custom<String>> {
     let pokeapi = Pokeapi::new(Box::new(Funtranslations::new()));
     match pokeapi.pokemon(name, mode).await {
         Ok(pokemon) => Either::Left(Json(pokemon)),
-        Err(err) => {
-            match &err {
-                Error::Http(http) => Either::Right(Custom(Status::new(http.status), format!("{}", http))),
-                Error::NotFound(_) => Either::Right(Custom(Status::NotFound, err.to_string())),
-                _ => Either::Right(Custom(Status::InternalServerError, format!("{}", err)))
+        Err(err) => match &err {
+            Error::Http(http) => {
+                Either::Right(Custom(Status::new(http.status), format!("{}", http)))
             }
-        }
+            Error::NotFound(_) => Either::Right(Custom(Status::NotFound, err.to_string())),
+            _ => Either::Right(Custom(Status::InternalServerError, format!("{}", err))),
+        },
     }
 }
 
