@@ -4,11 +4,11 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 #[allow(clippy::large_enum_variant)]
-pub enum Error {
+pub(crate) enum Error {
     #[error(transparent)]
     Http(#[from] HttpError),
-    #[error("Missing data: {0}")]
-    MissingData(String),
+    #[error("{0} not found")]
+    NotFound(String),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
     #[error(transparent)]
@@ -16,24 +16,31 @@ pub enum Error {
 }
 
 #[derive(Error, Debug)]
-pub struct HttpError {
-    status: u16,
+pub(crate) struct HttpError {
+    pub(crate) status: u16,
     msg: String,
-    source: reqwest::Error,
+    source: Option<reqwest::Error>,
 }
 
 impl HttpError {
-    pub(crate) fn new(status: u16, msg: String, source: reqwest::Error) -> Self {
+    pub(crate) fn from_error(status: u16, source: reqwest::Error) -> Self {
         Self {
             status,
-            msg,
-            source,
+            msg : source.to_string(),
+            source: Some(source),
         }
     }
 
+    pub(crate) fn from_message(status: u16, msg: &str) -> Self {
+        Self {
+            status,
+            msg: msg.to_owned(),
+            source: None
+        }
+    }
     pub(crate) fn extract(err: reqwest::Error) -> Error {
         if let Some(status) = err.status() {
-            HttpError::new(status.as_u16(), "Translation error".to_owned(), err).into()
+            HttpError::from_error(status.as_u16(), err).into()
         } else {
             err.into()
         }

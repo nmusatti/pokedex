@@ -51,20 +51,38 @@ impl Pokeapi {
     }
 
     async fn get_individual(name: &str) -> Result<Individual, Error> {
-        let individual_resp = get(format!("https://pokeapi.co/api/v2/pokemon/{}", name)).await;
-        if let Err(err) = individual_resp {
-            return Err(HttpError::extract(err));
+        match get(format!("https://pokeapi.co/api/v2/pokemon/{}", name)).await {
+            Err(err) => Err(HttpError::extract(err)),
+            Ok(resp) => {
+                if resp.status().is_success() {
+                    Ok(resp.json::<Individual>().await?)
+                }
+                else if resp.status().as_u16() == 404 {
+                    Err(Error::NotFound("Individual".to_owned()))
+                }
+                else {
+                    Err(HttpError::from_message(resp.status().as_u16(), "Error retrieving individual").into())
+                }
+            }
         }
-        Ok(individual_resp.unwrap().json::<Individual>().await?)
     }
 
     async fn get_species(url: &str) -> Result<Species, Error> {
-        let species_resp = get(url).await;
-        if let Err(err) = species_resp {
-            return Err(HttpError::extract(err));
+        match get(url).await{
+            Err(err) => Err(HttpError::extract(err)),
+            Ok(resp) => {
+                if resp.status().is_success() {
+                    Ok(resp.json::<Species>().await?)
+                }
+                else if resp.status().as_u16() == 404 {
+                    Err(Error::NotFound("Species".to_owned()))
+                }
+                else {
+                    Err(HttpError::from_message(resp.status().as_u16(), "Error retrieving species").into())
+                }
+            }
         }
-        Ok(species_resp.unwrap().json::<Species>().await?)
-    }
+   }
 
     pub(crate) async fn pokemon(&self, name: &str, mode: Mode) -> Result<Pokemon, Error> {
         let individual = Self::get_individual(name).await?;
@@ -74,7 +92,7 @@ impl Pokeapi {
             .iter()
             .find(|f| f.language.name == "en");
         if flavor.is_none() {
-            return Err(Error::MissingData("description".to_owned()));
+            return Err(Error::NotFound("Description".to_owned()));
         }
         let mut description = flavor.unwrap().flavor_text.to_owned();
         if let Mode::Translated = mode {

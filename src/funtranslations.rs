@@ -92,7 +92,7 @@ mod tests {
         let trans_resp = translator.execute(trans_request).await;
         match trans_resp {
             Ok(resp) => assert_eq!(resp.status().as_u16(), 200),
-            Err(err) => assert_eq!(err.status().unwrap().as_u16(), 400),
+            Err(err) => assert!(err.status().unwrap().as_u16() > 299),
         };
         Ok(())
     }
@@ -105,7 +105,11 @@ mod tests {
             .await;
         match resp {
             Ok(trans) => assert_eq!("Rope,  jane skips", trans),
-            Err(err) => assert_eq!(err.to_string(), "Status: 400 - Translation error"),
+            Err(err) => {
+                if let Error::Http(http) = err {
+                    assert!(http.status > 299);
+                }
+            },
         };
     }
 }
