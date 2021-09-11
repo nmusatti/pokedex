@@ -1,15 +1,18 @@
 Pokedex - A simple Pokemon retrieval RESTful service
 ----------------------------------------------------
 
-Pokedex is a minimal REST API implemented in Rust that showcases [Rocket](https://github.com/SergioBenitez/Rocket) as web framework and [Reqwest](https://github.com/seanmonstar/reqwest) as web client library.
+Pokedex is a minimal REST API implemented in Rust that showcases [Rocket](https://github.com/SergioBenitez/Rocket) as web framework and [Reqwest](https://github.com/seanmonstar/reqwest) as web client library. It provides two endpoints:
 
-In order to build and run the project on a your computer you need a Rust toolchain. To install one on my Linux workstation I ran the following commands:
+- `/pokemon/<<Name>>`: returns information on the `<<Name>>` pokemon
+- `/pokemon/translated/<<Name>>`: returns the same information, but with the description translated in a funny way
+
+In order to build and run the project on a your computer you need a Rust toolchain. To install one on a Linux workstation you should run the following command:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Checkout the [official documentation](https://forge.rust-lang.org/infra/other-installation-methods.html) if you use a different system. To update my shell's environment so as to be able to run the `cargo` command I ran:
+Checkout the [official documentation](https://forge.rust-lang.org/infra/other-installation-methods.html) if you use a different system. To update your shell's environment so as to be able to run the `cargo` command you should run:
 
 ```bash
 source $HOME/.cargo/env
