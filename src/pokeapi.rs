@@ -69,8 +69,11 @@ impl Pokeapi {
     pub(crate) async fn pokemon(&self, name: &str, mode: Mode) -> Result<Pokemon, Error> {
         let individual = Self::get_individual(name).await?;
         let species = Self::get_species(&individual.species.url).await?;
-        let flavor = species.flavor_text_entries.iter().find(|f| f.language.name == "en");
-        if let None = flavor {
+        let flavor = species
+            .flavor_text_entries
+            .iter()
+            .find(|f| f.language.name == "en");
+        if flavor.is_none() {
             return Err(Error::MissingData("description".to_owned()));
         }
         let mut description = flavor.unwrap().flavor_text.to_owned();
@@ -84,7 +87,12 @@ impl Pokeapi {
                 description = trans;
             }
         }
-        Ok(Pokemon::new(name, &description, &species.habitat.name, species.is_legendary))
+        Ok(Pokemon::new(
+            name,
+            &description,
+            &species.habitat.name,
+            species.is_legendary,
+        ))
     }
 }
 
@@ -92,13 +100,15 @@ impl Pokeapi {
 mod tests {
     use async_trait::async_trait;
 
-    use crate::{error::Error, funtranslations::Funtranslations, model::{Mode, Translator}};
+    use crate::{
+        error::Error,
+        funtranslations::Funtranslations,
+        model::{Mode, Translator},
+    };
 
     use super::Pokeapi;
 
-    struct DummyTranslator {
-
-    }
+    struct DummyTranslator {}
 
     #[async_trait]
     impl Translator for DummyTranslator {
@@ -106,7 +116,7 @@ mod tests {
             Ok(text.to_owned())
         }
     }
-    
+
     #[tokio::test]
     async fn plain_pokemon_ok() -> Result<(), Error> {
         let pokeapi = Pokeapi::new(Box::new(DummyTranslator {}));
@@ -114,7 +124,7 @@ mod tests {
         assert_eq!(pokemon.habitat, "forest");
         Ok(())
     }
-    
+
     #[tokio::test]
     async fn translated_pokemon_ok() -> Result<(), Error> {
         let pokeapi = Pokeapi::new(Box::new(Funtranslations::new()));
