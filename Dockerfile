@@ -13,7 +13,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --bin pokedex
 
-FROM debian:bullseye-slim as runtime
+FROM rust:1.55-bullseye as runtime
 WORKDIR /app
 COPY --from=builder /app/target/release/pokedex /usr/local/bin
 EXPOSE 8000
