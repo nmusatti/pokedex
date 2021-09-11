@@ -3,6 +3,7 @@ use std::fmt::Display;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum Error {
     #[error(transparent)]
     Http(#[from] HttpError),
