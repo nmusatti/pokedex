@@ -41,4 +41,6 @@ minikube kubectl -- port-forward service/pokedex 7000:8000 -n pokedex
 
 Now you can point your browser to (note the different port number):
 
+```
 http://localhost:7000/pokemon/translated/butterfree
+```
