@@ -7,13 +7,14 @@ things have changed, and so probably have the numbers, but it is still a major t
 
 I will try to describe a few areas that, in my opinion, would require some form of intervention.
 I assume that the deployment platform is Kubernetes ant that the corresponding infrastructure
-is already available.
+is already available. I consider networking issues, such as routing, DNS and proxies, to be outside
+the scope of this survey.
 
-#### Development
+### Development
 
 While Pokedex's logic is rather simple and it is unlikely to impact performance in a significant way,
 more attention should be devoted to the impact of coding choices on performance, from ownership
-vs. borrowing to which resources might be shared among requests, for instance to better exploit
+vs. borrowing, to which resources might be shared among requests, for instance to better exploit
 connection pooling.
 
 Error handling should be given more thought, striving for minimality but ensuring that information
@@ -43,12 +44,12 @@ residing in different data centres/availability zones.
 
 Ideally Pokedex's Docker image should contain default configuration suitable for execution on
 developer workstations, which should be overridable from the outside environment, e.g. from 
-environment variables. Different configMaps could be used to provide suitable sets of variable
+environment variables. Different config maps could be used to provide suitable sets of variable
 definitions for different environments. For services that may be considered to be conceptually part
 of the same application as Pokedex I find it convenient to rely more on conventions, e.g.
 consistent naming, than explicit configuration. In-cluster DNS support is very convenient in this
-respect. Deployment progress through different environment, such as test, UAT and production, should
-be automated and combine the same container image with specific configurations.
+respect. Deployment progress through different environments, such as test, UAT and production,
+should be automated and combine the same container image with specific configurations.
 
 ### Observability
 
@@ -66,9 +67,9 @@ and drilling down to specific events.
 ### Security
 
 In addition to HTTPS and TLS stricter security requirements may need to be addressed, in the form of
-authentication and authorization. Based on how critical the service is considered and on wider
-policies password based authentication may be adopted, backed by traditional providers such as
-FreeIPA or Active Directory. A more modern approch might entail the adoption of protocols such as
-OpenID Connect. Authorization might be rely on custom solutions or protocol such as OAuth 2. It
-might prove necessary to identify end user for auditing purposes, or service accounts may be
-considered sufficient.
+authentication and authorization. Based on how critical the service is considered and on 
+cross-service policies, password based authentication may be adopted, backed by traditional
+providers such as FreeIPA or Active Directory. A more modern approch might entail the adoption of
+protocols such as OpenID Connect. Authorization might be rely on custom solutions or protocol such 
+as OAuth 2. It might prove necessary to identify end user for auditing purposes, or service accounts
+may be considered sufficient.

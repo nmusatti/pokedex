@@ -16,7 +16,7 @@ Then you can start it with:
 minikube start
 ```
 
-In a producion setting usually container images are kept in registries and Kubernetes would pull
+In a production setting usually container images are kept in registries and Kubernetes would pull
 Pokedex's image from one of those. To avoid this need you can rebuild the Pokedex project within
 Minikube's Docker context by running the following commands:
 
