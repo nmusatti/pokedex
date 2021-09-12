@@ -9,7 +9,7 @@ Pokedex is a minimal REST API implemented in Rust that showcases
 - `/pokemon/translated/<<Name>>`: returns the same information, but with the description translated
   in a funny way
 
-In order to build and run the project on a your computer you need a Rust toolchain. To install one
+In order to build and run the project on your computer you need a Rust toolchain. To install one
 on a Linux workstation you should run the following command:
 
 ```bash
@@ -24,7 +24,7 @@ if you use a different system. To update your shell's environment so as to be ab
 source $HOME/.cargo/env
 ```
 
-Now, in the directory where you cloned the Pokedex repository you can run:
+Now, in the directory where you cloned the Pokedex repository, you can run:
 
 ```bash
 cargo run
@@ -79,8 +79,8 @@ You should see output similar to:
 
 Pokedex may also be run as a Docker container. If the `docker` command is not available on your
 system, check your system documentation or the
-[official installation guide](https://docs.docker.com/get-docker/). Once you're done you can build
-Pokedex's container image:
+[official installation guide](https://docs.docker.com/get-docker/). Once you have installed it you
+can build Pokedex's container image:
 
 ```bash
 docker build -t pokedex .
