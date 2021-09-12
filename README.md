@@ -94,3 +94,5 @@ docker run -p 8000:8000 -d pokedex
 
 You should see the container's id almost immediately, which is a long string of hexadecimal digits.
 When it appears you can query the service with your browser as described above.
+
+If you are interested in Kubernetes, check out [how to deploy Pokedex to Kubernetes](kubernetes)
