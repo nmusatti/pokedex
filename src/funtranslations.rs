@@ -13,12 +13,12 @@ use crate::{
 
 #[derive(Deserialize, Debug)]
 struct Contents {
-    translated: Option<String>,
+    translated: String,
 }
 
 #[derive(Deserialize, Debug)]
 struct Translation {
-    contents: Option<Contents>,
+    contents: Contents,
 }
 
 pub(crate) struct Funtranslations {
@@ -52,8 +52,18 @@ impl Funtranslations {
         let trans_resp = self.execute(trans_request).await;
         match trans_resp {
             Ok(resp) => {
-                let translation = resp.json::<Translation>().await?;
-                Ok(translation.contents.unwrap().translated.unwrap())
+                if resp.status().is_success() {
+                    let translation = resp.json::<Translation>().await?;
+                    Ok(translation.contents.translated)
+                }
+                else if resp.status().as_u16() == 404 {
+                    Err(Error::NotFound("Translation".to_owned()))
+                } else {
+                    Err(
+                        HttpError::from_message(resp.status().as_u16(), "Error retrieving translation")
+                            .into(),
+                    )
+                }
             }
             Err(err) => Err(HttpError::extract(err)),
         }
