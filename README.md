@@ -86,7 +86,8 @@ can build Pokedex's container image:
 docker build -t pokedex .
 ```
 
-And then execute it:
+This will also take a while, because Docker has to rebuild the application. When it is done you may
+execute the new container with:
 
 ```bash
 docker run -p 8000:8000 -d pokedex

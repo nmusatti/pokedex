@@ -42,7 +42,7 @@ reviews as a precondition to committing to the main branch should be considered.
 ### Deployment
 
 In a Kubernetes deployment access to a service should be routed through an ingress, which should
-only expose it as HTTPS. While Pokedex doesn't expose sensitive information, it might be desirable
+only expose it as HTTPS. While Pokedex doesn't provide sensitive information, it might be desirable
 to adopt TLS also for intra-cluster networking, in which case a service mesh, such as Istio or
 Linkerd, may be of use. Care should be given to correctly sizing the number of replicas to be
 executed. Some form of autoscaling should also be considered. If a high degree of availability is
@@ -51,7 +51,7 @@ residing in different data centres/availability zones. Overprovisioning may help
 of partial outages.
 
 Ideally Pokedex's Docker image should contain a default configuration suitable for execution on
-developer workstations, which should be overridable from the outside environment, e.g. from 
+developer workstations, which should be overridable from the outside, e.g. from 
 environment variables. Different config maps could be used to provide suitable sets of variable
 definitions for different environments. For services that may be considered to be conceptually part
 of the same application as Pokedex I find it convenient to rely more on conventions, such as
@@ -67,7 +67,7 @@ form of event monitoring. Ideally this would both signal situations requiring sw
 provide a backlog of upstanding and solved error conditions. different kind of notifications should
 be used for problems of different severity. Automated paging may be set up for critical problems.
 API clients should receive informative diagnostics that should enable their developers to provide
-feedback to their own end users and to report problems effectively.
+feedback to their own end users and to report problems back effectively.
 
 Performance should also be monitored, to ensure unexpected load spikes are dealt with rapidly and to
 provide developers with information on areas that need further analysis and optimization. Data such
@@ -81,6 +81,6 @@ In addition to HTTPS and TLS stricter security requirements may need to be addre
 authentication and authorization. Based on how critical the service is considered and on 
 cross-service policies, password based authentication may be adopted, backed by traditional
 providers such as FreeIPA or Active Directory. A more modern approch might entail the adoption of
-protocols such as OpenID Connect. Authorization might be rely on custom solutions or protocol such 
-as OAuth 2. It might prove necessary to identify end user for auditing purposes, or service accounts
-may be considered sufficient.
+protocols such as OpenID Connect. Authorization might rely on custom solutions or protocols such 
+as OAuth 2. It might prove necessary to identify end users for auditing purposes, or service
+accounts may be considered sufficient.
