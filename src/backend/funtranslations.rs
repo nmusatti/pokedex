@@ -57,14 +57,14 @@ impl Funtranslations {
                 if resp.status().is_success() {
                     let translation = resp.json::<Translation>().await?;
                     Ok(translation.contents.translated)
-                }
-                else if resp.status().as_u16() == 404 {
+                } else if resp.status().as_u16() == 404 {
                     Err(Error::NotFound("Translation".to_owned()))
                 } else {
-                    Err(
-                        HttpError::from_message(resp.status().as_u16(), "Error retrieving translation")
-                            .into(),
+                    Err(HttpError::from_message(
+                        resp.status().as_u16(),
+                        "Error retrieving translation",
                     )
+                    .into())
                 }
             }
             Err(err) => Err(HttpError::extract(err)),

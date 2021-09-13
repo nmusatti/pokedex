@@ -2,7 +2,11 @@ use rocket::{
     catch, get, http::Status, response::status::Custom, serde::json::Json, Either, Request,
 };
 
-use crate::{backend::backend, error::Error, model::{Mode, Pokemon}};
+use crate::{
+    backend::backend,
+    error::Error,
+    model::{Mode, Pokemon},
+};
 
 async fn process(name: &str, mode: Mode) -> Either<Json<Pokemon>, Custom<String>> {
     let pokeapi = backend();

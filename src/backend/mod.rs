@@ -1,9 +1,12 @@
-mod pokeapi;
 mod funtranslations;
+mod pokeapi;
 
 use async_trait::async_trait;
 
-use crate::{error::Error, model::{Language, Mode, Pokemon}};
+use crate::{
+    error::Error,
+    model::{Language, Mode, Pokemon},
+};
 
 use self::{funtranslations::Funtranslations, pokeapi::Pokeapi};
 

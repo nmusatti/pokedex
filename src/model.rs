@@ -1,6 +1,5 @@
 use rocket::serde::Serialize;
 
-
 #[derive(Serialize)]
 pub(crate) struct Pokemon {
     pub(crate) name: String,

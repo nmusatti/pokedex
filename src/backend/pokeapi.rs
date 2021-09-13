@@ -132,7 +132,11 @@ impl PokemonSource for Pokeapi {
 mod tests {
     use async_trait::async_trait;
 
-    use crate::{backend::{Translator, funtranslations::Funtranslations}, error::Error, model::Mode};
+    use crate::{
+        backend::{funtranslations::Funtranslations, Translator},
+        error::Error,
+        model::Mode,
+    };
 
     use super::Pokeapi;
 
