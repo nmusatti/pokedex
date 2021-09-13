@@ -8,8 +8,10 @@ use serde::Deserialize;
 
 use crate::{
     error::{Error, HttpError},
-    model::{Language, Translator},
+    model::Language,
 };
+
+use super::Translator;
 
 #[derive(Deserialize, Debug)]
 struct Contents {

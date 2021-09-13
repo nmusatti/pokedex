@@ -1,11 +1,15 @@
+use async_trait::async_trait;
+
 use reqwest::get;
 
 use serde::Deserialize;
 
 use crate::{
     error::{Error, HttpError},
-    model::{Language, Mode, Pokemon, Translator},
+    model::{Language, Mode, Pokemon},
 };
+
+use super::{PokemonSource, Translator};
 
 #[derive(Deserialize, Debug)]
 struct SpeciesRef {
@@ -117,15 +121,18 @@ impl Pokeapi {
     }
 }
 
+#[async_trait]
+impl PokemonSource for Pokeapi {
+    async fn pokemon(&self, name: &str, mode: Mode) -> Result<Pokemon, Error> {
+        self.pokemon(name, mode).await
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use async_trait::async_trait;
 
-    use crate::{
-        error::Error,
-        funtranslations::Funtranslations,
-        model::{Mode, Translator},
-    };
+    use crate::{backend::{Translator, funtranslations::Funtranslations}, error::Error, model::Mode};
 
     use super::Pokeapi;
 

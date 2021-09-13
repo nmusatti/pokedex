@@ -1,8 +1,7 @@
 mod api;
+mod backend;
 mod error;
-mod funtranslations;
 mod model;
-mod pokeapi;
 
 use rocket::{catchers, routes, Config};
 

@@ -2,15 +2,10 @@ use rocket::{
     catch, get, http::Status, response::status::Custom, serde::json::Json, Either, Request,
 };
 
-use crate::{
-    error::Error,
-    funtranslations::Funtranslations,
-    model::{Mode, Pokemon},
-    pokeapi::Pokeapi,
-};
+use crate::{backend::backend, error::Error, model::{Mode, Pokemon}};
 
 async fn process(name: &str, mode: Mode) -> Either<Json<Pokemon>, Custom<String>> {
-    let pokeapi = Pokeapi::new(Box::new(Funtranslations::new()));
+    let pokeapi = backend();
     match pokeapi.pokemon(name, mode).await {
         Ok(pokemon) => Either::Left(Json(pokemon)),
         Err(err) => match &err {
