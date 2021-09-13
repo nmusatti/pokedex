@@ -3,16 +3,14 @@ mod backend;
 mod error;
 mod model;
 
-use rocket::{catchers, routes, Config};
+use rocket::{routes, Config};
 
-use crate::api::{not_found, plain, translated};
+use crate::api::{plain, translated};
 use crate::error::Error;
 
 #[rocket::main]
 async fn main() -> Result<(), Error> {
-    let rocket = rocket::build()
-        .mount("/pokemon", routes![plain, translated])
-        .register("/", catchers![not_found]);
+    let rocket = rocket::build().mount("/pokemon", routes![plain, translated]);
 
     let figment = rocket
         .figment()

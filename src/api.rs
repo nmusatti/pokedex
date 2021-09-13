@@ -1,6 +1,4 @@
-use rocket::{
-    catch, get, http::Status, response::status::Custom, serde::json::Json, Either, Request,
-};
+use rocket::{get, http::Status, response::status::Custom, serde::json::Json, Either};
 
 use crate::{
     backend::backend,
@@ -30,9 +28,4 @@ pub(crate) async fn plain(name: &str) -> Either<Json<Pokemon>, Custom<String>> {
 #[get("/translated/<name>")]
 pub(crate) async fn translated(name: &str) -> Either<Json<Pokemon>, Custom<String>> {
     process(name, Mode::Translated).await
-}
-
-#[catch(404)]
-pub(crate) fn not_found(req: &Request) -> String {
-    format!("'{}' not found", req.uri())
 }
